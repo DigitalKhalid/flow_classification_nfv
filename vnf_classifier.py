@@ -1,7 +1,9 @@
-from scapy.all import IP, TCP
+from scapy.all import IP, TCP, Dot1Q
 from mininet.node import Node
+from mininet.log import info
 import joblib
 import warnings
+
 
 warnings.filterwarnings("ignore")
 
@@ -31,6 +33,16 @@ class FlowClassifier(Node):
         features = self.scaler.transform([features])
 
         # Perform flow classification using the ML model
-        predicted_class = self.model.predict(features)[0]
+        predicted_class = self.model.predict(features)[0]     
+
+        if predicted_class:
+            # add vlan tag as 1 for elephant flows
+            packet = packet / Dot1Q(vlan=1)
+            info('\nSwitch communicates with the controller to handle this packet.\n')
+
+        elif not predicted_class:
+            # add vlan tag as 0 for mice flows
+            packet = packet / Dot1Q(vlan=0)
+            info(f'\nSwitch directly sending the packet to the destination......\n')
         
-        return predicted_class
+        return packet

@@ -2,18 +2,9 @@ from scapy.all import Ether, IP, TCP, Raw
 import pandas as pd
 import random
 import warnings
-from mininet.log import info
+
 
 warnings.filterwarnings("ignore")
-
-available_ips = [
-    '10.0.0.1',
-    '10.0.0.2',
-    '10.0.0.3',
-    '10.0.0.4',
-    '10.0.0.5',
-]
-
 
 def load_trace_file():
     # trace_file = '../1. Data Preparation/parsed_packet_trace.csv'
@@ -36,7 +27,7 @@ def gen_packet(src_ip, dst_ip, src_port, dst_port, protocol, pkt_size):
     return packet
 
 
-def get_packet(packets, elephant_probability=[10, 1]):
+def get_packet(packets, host_ips, elephant_probability=[10, 1]):
     elephant = random.choices([0, 1], weights=elephant_probability, k=1)[0]
     packets = packets[packets['elephant'] == elephant]
 
@@ -51,7 +42,7 @@ def get_packet(packets, elephant_probability=[10, 1]):
     dst_port = packet_info[2]
     pkt_size = packet_info[3]
 
-    random_ips = random.sample(available_ips, 2)
+    random_ips = random.sample(host_ips, 2)
     src_ip = random_ips[0]
     dst_ip = random_ips[1]
     
@@ -60,8 +51,16 @@ def get_packet(packets, elephant_probability=[10, 1]):
 
 
 if __name__ == '__main__':
+    host_ips = [
+        '10.0.0.1',
+        '10.0.0.2',
+        '10.0.0.3',
+        '10.0.0.4',
+        '10.0.0.5',
+    ]
+
     packets = load_trace_file()
-    packet = get_packet(packets)
+    packet = get_packet(packets, host_ips)
 
     # Access packet information
     src_ip = packet[IP].src

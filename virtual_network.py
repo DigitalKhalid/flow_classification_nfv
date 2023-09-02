@@ -3,11 +3,12 @@ from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.log import info, setLogLevel
 from mininet.link import TCLink
-from mininet.util import irange
 import warnings
 import time
+from datetime import datetime
 from packet_injection import load_trace_file, get_packet
-from topology import SimpleTopology, FatTreeTopology
+from topology import SimpleTopology
+import random
 
 
 warnings.filterwarnings("ignore")
@@ -15,38 +16,22 @@ setLogLevel( 'info' )
         
 
 def main():
-    k = 2  # Number of pods
-    p = 2  # Number of hosts per switch
-
-    topo = FatTreeTopology(k, p)
-    # topo = SimpleTopology()
+    hosts = 10
+    topo = SimpleTopology(hosts)
     net = Mininet(topo, controller=RemoteController, link=TCLink)
 
     # Start the network
     net.start()
 
-    topo.set_ip_addresses(net, k, p)
-    vnfs = [net.get(f'vnf{i}{j}' for i in irange(0, k - 1) for j in irange(1, k/2))]
+    # set host IP addresses
+    host_ips = topo.set_ip_addresses(net, hosts)
+    info(f'host ips: {host_ips}\n')
+
     # Get references to the nodes
-    # h1 = net.get('h1')
-    # h2 = net.get('h2')
-    # h3 = net.get('h3')
-    # h4 = net.get('h4')
-    # h5 = net.get('h5')
-    # vnf = net.get('vnf1')
+    vnf = net.get('vnf1')
+    s1 = net.get('s1')
 
-    # s1 = net.get('s1')
-
-    # # Apply IP addresses to nodes
-    # h1.setIP('10.0.0.1')
-    # h2.setIP('10.0.0.2')
-    # h3.setIP('10.0.0.3')
-    # h4.setIP('10.0.0.4')
-    # h5.setIP('10.0.0.5')
-
-    # vnf.setIP('10.0.0.6')
-
-    # s1.cmd('ifconfig s1-eth1 mtu 5000 up')
+    s1.cmd('ifconfig s1-eth1 mtu 5000 up')
 
     packets = load_trace_file()
     print('Loading packet trace file.....')
@@ -54,32 +39,29 @@ def main():
     elephant_flows = 0
     mice_flows = 0
 
-    while True:
-        # time.sleep(2)
-        packet = get_packet(packets, [10, 1])
+    start_time = time.time()
+    injection_duration = 60 # Duration of total packet injection in seconds
 
-        elephant_flow = vnf.classify_packet(packet)
-        info(f'\nElephant Flow: {True if elephant_flow else False}\n')
+    info(f'Packet injection starts at {datetime.fromtimestamp(start_time).strftime("%d-%m-%Y %H:%M:%S")}')
+    info(f' and will stop at {datetime.fromtimestamp(start_time + injection_duration).strftime("%d-%m-%Y %H:%M:%S")}\n')
 
-        if elephant_flow:
-            # add vlan tag as 1 for elephant flows
-            packet = packet / Dot1Q(vlan=1)
-            info('\nElephant packet, will be handled by controller.\n')
-            
-            # info(f'Sending packet to switch......')
-            # sendp(packet, iface='s1-eth1')
+    while time.time() < start_time + injection_duration:
+        pkt_iat = random.uniform(0, 1) # packet inter arival time having random value between 0 and 2 seconds
+        time.sleep(pkt_iat)
 
+        packet = get_packet(packets, host_ips, [10, 1])
+
+        tagged_packet = vnf.classify_packet(packet)
+
+        if tagged_packet[Dot1Q].vlan == 1:
             elephant_flows = elephant_flows + 1
-            info(f'Total elephant: {elephant_flows}, Total Mice: {mice_flows}')
+            info(f'Total elephant: {elephant_flows}, Total Mice: {mice_flows}\n')
 
-        elif not elephant_flow:
-            # add vlan tag as 0 for mice flows
-            packet = packet / Dot1Q(vlan=0)
-            info(f'Switch sending the packet to the destination......')
+        elif tagged_packet[Dot1Q].vlan == 0:
             sendp(packet, iface='s1-eth1')
 
             mice_flows = mice_flows + 1
-            info(f'Total elephant: {elephant_flows}, Total Mice: {mice_flows}')
+            info(f'Total elephant: {elephant_flows}, Total Mice: {mice_flows}\n')
 
     # net.interact()
 
