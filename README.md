@@ -1,2 +1,2 @@
-# flow_classification_nfv
-A project for PhD research paper 
+# Resource-Aware-Traffic-Steering-in-Service-Function-Chaining
+Project for PhD research and paper

@@ -1,0 +1,12 @@
+Install Python 3.9.0
+Install mininet using command: sudo apt-get install mininet
+Paste all files in a same directory
+Open this directory in VSCode
+Create virtual environment using command: python3.9 -m venv fc
+Active the virtual environment using command: source fc/bin/activate
+Now install pandas and scapy using command: sudo python3.9 -m pip install pandas scapy
+Now install other packages using command: python3 -m pip install -r requirements.txt
+Activate Python interpreter of VSCode: Go to views - Command Palette - Python:Select Interpreter - Python 3.9.0('fc':venv) ./fc/bin/python
+Now you can run the network using command: sudo python3 virtual_network.py
+This command will create a network topology, create packets and send them among 5 hosts using 1 switch and 1 VNF Classifier.
+Capture the packets using wireshark. Open wireshark using sudo command to start capture. Capture device is 's1-eth1'
