@@ -1,4 +1,4 @@
-from scapy.all import IP, TCP, Dot1Q
+from scapy.all import IP, TCP, Dot1Q, wrpcap
 from mininet.node import Node
 from mininet.log import info
 import joblib
@@ -44,5 +44,5 @@ class FlowClassifier(Node):
             # add vlan tag as 0 for mice flows
             packet = packet / Dot1Q(vlan=0)
             info(f'\nSwitch directly sending the packet to the destination......\n')
-        
+
         return packet

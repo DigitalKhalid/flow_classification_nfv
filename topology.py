@@ -1,12 +1,13 @@
 from mininet.topo import Topo
 from mininet.util import irange
 from vnf_classifier import FlowClassifier
+from mininet.node import OVSSwitch
 
 
 # Create a custom Mininet topology with the FlowClassifier VNF
 class SimpleTopology(Topo):
     def build(self, hosts):
-        switch = self.addSwitch('s1')
+        switch = self.addSwitch('s1', cls=OVSSwitch)
         classifier = self.addHost( 'vnf1', cls=FlowClassifier)
 
         self.addLink( classifier, switch)

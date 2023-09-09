@@ -1,4 +1,4 @@
-from scapy.all import Ether, IP, TCP, Raw
+from scapy.all import Ether, IP, TCP, Raw, ICMP, wrpcap
 import pandas as pd
 import random
 import warnings
@@ -16,7 +16,7 @@ def load_trace_file():
 
 def gen_packet(src_ip, dst_ip, src_port, dst_port, protocol, pkt_size):
     # Generate packet
-    packet = Ether() / IP(src=src_ip, dst=dst_ip, proto=protocol) / TCP(sport=src_port, dport=dst_port)
+    packet = Ether(type=0x0800) / IP(src=src_ip, dst=dst_ip, proto=protocol) / TCP(sport=src_port, dport=dst_port) / ICMP()
 
     # Create a packet with padding to achieve the desired size
     padding_size = pkt_size - len(packet)
@@ -47,6 +47,7 @@ def get_packet(packets, host_ips, elephant_probability=[10, 1]):
     dst_ip = random_ips[1]
     
     packet = gen_packet(src_ip, dst_ip, src_port, dst_port, protocol, pkt_size)
+
     return packet
 
 
@@ -77,3 +78,4 @@ if __name__ == '__main__':
     print("Destination Port:", dst_port)
     print("Protocol:", protocol)
     print("Packet Size:", pkt_size)
+    print(packet)
