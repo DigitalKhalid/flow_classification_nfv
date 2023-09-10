@@ -6,7 +6,7 @@ from mininet.link import TCLink
 import warnings
 import time
 from datetime import datetime
-from packet_injection import load_trace_file, get_packet
+from packet_injection import load_trace_file, get_packet_random, get_packet_sequenced
 from topology import SimpleTopology
 import random
 from scapy.all import IP
@@ -17,29 +17,41 @@ warnings.filterwarnings("ignore")
 setLogLevel( 'info' )
         
 def inject_packets(net, start_time, network_duration, packets, host_ips, vnf, log_file):
-    elephant_flows = 0
-    mice_flows = 0
+    elephants = 0
+    mice = 0
+    classified_elephant = 0
+    classified_mice = 0
+    miss_elephants = 0
+    miss_mice = 0
 
     while time.time() < start_time + network_duration:
-        pkt_iat = random.uniform(0, 0.2) # packet inter arival time having random value between 0 and 2 seconds
+        pkt_iat = random.uniform(0, 0.05) # packet inter arival time having random value between 0 and 2 seconds
         time.sleep(pkt_iat)
 
-        packet = get_packet(packets, host_ips, [10, 1])
+        packet, elephant = get_packet_sequenced(packets, host_ips, elephants, mice, [10, 1])
+        if elephant == 1:
+            elephants = elephants + 1
 
+        else:
+            mice = mice + 1
+
+        # info(f'Elephants: {elephants}, Mice: {mice}')
         tagged_packet = vnf.classify_packet(packet)
 
         if tagged_packet[Dot1Q].vlan == 1:
-            send_packet(net, tagged_packet, host_ips, 's1-eth1', 1, log_file)
-            elephant_flows = elephant_flows + 1
+            send_packet(net, tagged_packet, host_ips, 's1-eth2', elephant, 1, log_file)
+            classified_elephant = classified_elephant + 1
+            miss_elephants + 1 if elephant == 0 else None
             info('')
 
         elif tagged_packet[Dot1Q].vlan == 0:
-            send_packet(net, tagged_packet, host_ips, 's1-eth2', 0, log_file)
-            mice_flows = mice_flows + 1
+            send_packet(net, tagged_packet, host_ips, 's1-eth3', elephant, 0, log_file)
+            classified_mice = classified_mice + 1
+            miss_mice + 1 if elephant == 1 else None
             info('')
 
 
-def send_packet(net, packet, host_ips, interface, elephant, log_file):
+def send_packet(net, packet, host_ips, interface, actual_elephant, classified_elephant, log_file):
     src_ip = packet[IP].src
     dst_ip = packet[IP].dst
     src_port = packet[TCP].sport
@@ -48,14 +60,16 @@ def send_packet(net, packet, host_ips, interface, elephant, log_file):
     pkt_size = len(packet)
 
     proto = '' if protocol == 6 else ' -1' if protocol == 17 else ' -2'
+    signature = ' -e "elephant"' if classified_elephant == 1 else ''
 
     host = net.get(f'h{host_ips.index(src_ip) + 1}')
-    cmd = f'hping3 -c 1 -s {src_port} -p {dst_port} -d {pkt_size}{proto} {dst_ip}'
+    cmd = f'hping3 -c 1 -s {src_port} -p {dst_port} -d {pkt_size}{proto}{signature} {dst_ip}'
     info(f'{host} sending packet: {cmd}')
     host.cmd(cmd)
     
     # Add Log
-    log = [time.time(), src_ip, dst_ip, src_port, dst_port, protocol, pkt_size, elephant]
+    log = [time.time(), src_ip, dst_ip, src_port, dst_port, protocol, pkt_size, actual_elephant, classified_elephant]
+    info(f'\nLog: {log}\n')
     add_log(log, log_file)
 
 
@@ -67,7 +81,7 @@ def add_log(log, log_file):
 
 def main(hosts, network_duration):
     topo = SimpleTopology(hosts)
-    controller = RemoteController('ryu', ip='127.0.0.1', port=6633)
+    controller = RemoteController('ryu', ip='127.0.0.1', port=6633, protocols="OpenFlow13")
     net = Mininet(topo, controller=controller, link=TCLink)
 
     # Start the network
@@ -87,13 +101,16 @@ def main(hosts, network_duration):
     info(f'Packet injection starts at {datetime.fromtimestamp(start_time).strftime("%d-%m-%Y %H:%M:%S")}')
     info(f' and will stop at {datetime.fromtimestamp(start_time + network_duration).strftime("%d-%m-%Y %H:%M:%S")}\n')
 
-    log_file = f'log_injected_flows_{int(start_time)}.csv'
+    log_file = f'logs/log_injected_flows_{int(start_time)}.csv'
+    columns = ['timestamp', 'src_ip', 'dst_ip', 'src_port', 'dst_port', 'protocol', 'pkt_size', 'actual_elephant', 'predicted_elephant']
+    add_log(columns, log_file)
+    
+    # net.interact()
     inject_packets(net, start_time, network_duration, packets, host_ips, vnf, log_file)
 
-    # net.interact()
     # Stop the network
     net.stop()
 
 
 if __name__ == '__main__':
-    main(10, 100)
+    main(2, 100)

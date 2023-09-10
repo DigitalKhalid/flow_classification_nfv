@@ -8,9 +8,9 @@ from mininet.node import OVSSwitch
 class SimpleTopology(Topo):
     def build(self, hosts):
         switch = self.addSwitch('s1', cls=OVSSwitch)
-        classifier = self.addHost( 'vnf1', cls=FlowClassifier)
+        classifier = self.addHost( 'vnf1', ip='10.0.1.1', cls=FlowClassifier, protocols="OpenFlow13")
 
-        self.addLink( classifier, switch)
+        self.addLink( classifier, switch )
 
         for i in irange(1, hosts):
             host = self.addHost(f'h{i}')
