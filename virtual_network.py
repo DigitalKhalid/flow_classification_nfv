@@ -11,6 +11,7 @@ from topology import SimpleTopology
 import random
 from scapy.all import IP
 import csv
+from vn_settings import *
 
 
 warnings.filterwarnings("ignore")
@@ -25,17 +26,19 @@ def inject_packets(net, start_time, network_duration, packets, host_ips, vnf, lo
     miss_mice = 0
 
     while time.time() < start_time + network_duration:
-        pkt_iat = random.uniform(0, 0.05) # packet inter arival time having random value between 0 and 2 seconds
+        pkt_iat = random.uniform(0, pkt_injection_time)
         time.sleep(pkt_iat)
 
-        packet, data_size, elephant, injection_order = get_packet_sequenced(packets, host_ips, elephants, mice, [10, 1])
+        if pkt_injection_type == 'sequenced':
+            packet, data_size, elephant, injection_order = get_packet_sequenced(packets, host_ips, elephants, mice, injection_ratio)
+
+        elif pkt_injection_type == 'random':
+            packet, data_size, elephant, injection_order = get_packet_random(packets, host_ips, elephants, mice, injection_ratio)
+
         if elephant == 1:
             elephants = elephants + 1
-            info(f'Elephants: {elephants}')
-
         else:
             mice = mice + 1
-            info(f'Mice: {mice}')
 
         send_packet(net, packet, data_size, host_ips, elephant, 1, log_file)
 
@@ -93,10 +96,10 @@ def write_summary(summary_file, hosts_ips, start_time, elephants, mice, injectio
     summary.write('==============================================================================================================\n')
     summary.write('Virtual Network: Mininet\n')
     summary.write('Controller: Ryu\n')
-    summary.write('No. of Switches: 01\n')
+    summary.write('No. of Switches: 1\n')
     summary.write(f'No. of Hosts: {len(hosts_ips)}\n')
     summary.write(f'Host IP Addresses: {hosts_ips}\n')
-    summary.write('==============================================================================================================\n')
+    summary.write('\n==============================================================================================================\n')
     summary.write('Packet Injection Overview:\n')
     summary.write('==============================================================================================================\n')
     summary.write(f'Start Time: {get_time(start_time)}\n')
@@ -108,7 +111,7 @@ def write_summary(summary_file, hosts_ips, start_time, elephants, mice, injectio
     summary.write(f'Flows extraction from dataset is labeled as elephant flows which are greater than 100MB.\n')
     summary.write(f'There are two cost effective decision tree models used. One for classification at ingress\n')
     summary.write(f'port of switch and the other is used for re-classification of flows on controller side.\n')
-    summary.write(f'The first model is trained on dataset extracted from MAWI and the other one is trained on the.\n')
+    summary.write(f'The first model is trained on dataset extracted from MAWI and the other one is trained on the\n')
     summary.write(f'misclassifications extracted from the first model. This ensures the accuracy of overall classification process.\n')
     summary.write(f'The packets injected from the flows file in {injection_order} order.\n')
     summary.close()
@@ -160,4 +163,4 @@ def main(hosts, network_duration):
 
 
 if __name__ == '__main__':
-    main(3, 30)
+    main(vn_hosts, vn_duration)

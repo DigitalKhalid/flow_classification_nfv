@@ -1,15 +1,40 @@
 
+Virtual Network Simulation Summary by Digital Khalid
+
+==============================================================================================================
+Network Overview:
+==============================================================================================================
+Virtual Network: Mininet
+Controller: Ryu
+No. of Switches: 1
+No. of Hosts: 5
+Host IP Addresses: ['10.0.0.1', '10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5']
+
+==============================================================================================================
+Packet Injection Overview:
+==============================================================================================================
+Start Time: 11-09-2023 21:06:23
+End Time: 11-09-2023 21:06:54
+Total Packets Injected: 117
+Actual Elephants Injected: 13
+Actual Mice Injected: 104
+Packets injected from the unique flows file extracted from the MAWI dataset.
+Flows extraction from dataset is labeled as elephant flows which are greater than 100MB.
+There are two cost effective decision tree models used. One for classification at ingress
+port of switch and the other is used for re-classification of flows on controller side.
+The first model is trained on dataset extracted from MAWI and the other one is trained on the
+misclassifications extracted from the first model. This ensures the accuracy of overall classification process.
+The packets injected from the flows file in sequential order.
+
 ==============================================================================================================
 Classification Overview:
 ==============================================================================================================
-Total Flows: 191.0
-Elephant Flows classified at Ingress Port: 64.0
-Mice Flows classified at Ingress Port: 127.0
-Elephant Flows classified by controller: 19.0
-Mice Flows classified by controller: 45.0
-Total flows finally classified as Elephant: 19.0
-Total flows finally classified as mice: 172.0
-Flow rules installed to avoid repeated packet-in for classified elephants flows: 38/2
-Flow rules installed to avoid repeated packet-in for classified mice flows: 344/2
-
-By Digital Khalid
+Total Flows: 105.0
+Elephant Flows classified at Ingress Port: 36.5
+Mice Flows classified at Ingress Port: 68.5
+Elephant Flows classified by controller: 11.5
+Mice Flows classified by controller: 25.0
+Total flows finally classified as Elephant: 11.5
+Total flows finally classified as mice: 93.5
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 11.5
+Flow rules installed to avoid repeated packet-in for classified mice flows: 93.5

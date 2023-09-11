@@ -1,0 +1,73 @@
+----------------------------------------------------------------------------------------------
+Pre-requisites to run virtual network simulation
+----------------------------------------------------------------------------------------------
+- Install Python 3.9.0
+- Install mininet using command: sudo apt-get install mininet
+- Make a new directory and paste all files in a same directory
+- Open terminal from the same directory.
+- Create virtual environment using command: python3.9 -m venv fc
+- Active the virtual environment using command: source fc/bin/activate
+- Now install pandas and scapy using command: sudo python3.9 -m pip install pandas scapy
+- Now install other packages using command: python3 -m pip install -r requirements.txt
+
+----------------------------------------------------------------------------------------------
+Settings to customize virtual network simulation
+----------------------------------------------------------------------------------------------
+- You can customize simulation by changing the values of variables given in file: vn_settings.py
+- There are following settings available:
+    - vn_host
+        - This is virtual network host created by mininet.
+        - Default value is 5. You can set the value upto 25.
+
+    - vn_duration
+        - This is virtual network duration in seconds.
+        - Default value is 30.
+
+    - pkt_injection_type
+        - This defines how packets will inject from the source file.
+        - There are two options available:
+            - sequential
+                - It will send the packets from source file in a sequenced manner.
+            - random
+                - It will send the packets from the source file in a random order.
+
+    - pkt_injection_time
+        - This is the delay in seconds to send the packets ranges from 0 to the given value.
+        - Default value is 0.05 means packets sends by the delay randomly choosen between 0 and 0.05.
+
+    - injection_ratio
+        - This is the ratio between mice packets and elephant packets.
+        - Default value is [10, 1] means mice packets:elephant packets = 10:1
+
+----------------------------------------------------------------------------------------------
+How to run virtual network?
+----------------------------------------------------------------------------------------------
+- Open the terminal from the same directory.
+- Use command: ./start.sh (Its needs root pervilages hence asked for password.)
+- This command will do the following:
+    - Run Mininet Cleanup to remove previous instance of virtual network if any.
+    - Run Ryu Rest API.
+    - Start Ryu Controller.
+    - Create a network topology.
+    - Start Injecting Packets to the network.
+    - The whole process will run for a specificed period of time and then stops.
+    - Create log file for packet injection.
+    - Create log file for flow classification (Remove duplicate values if any).
+    - Create summary file. Log files and summary files will be created in logs folder.
+
+----------------------------------------------------------------------------------------------
+Asumptions
+----------------------------------------------------------------------------------------------
+- We are sending flows from the dataset extracted from the MAWI packet trace data.
+- We have actual classification in the dataset by which we can measure the outputs and compares the actual flows vs classified flows.
+
+----------------------------------------------------------------------------------------------
+Packet Capturing
+----------------------------------------------------------------------------------------------
+You can capture the packets using WireShark. Open WireShark using following command:
+    - sudo wireshark
+
+----------------------------------------------------------------------------------------------
+Thank you
+For more information, please email: po.mwts@gmail.com
+----------------------------------------------------------------------------------------------
