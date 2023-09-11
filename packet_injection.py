@@ -53,7 +53,7 @@ def get_packet_random(packets, host_ips, elephant_probability=[10, 1]):
     return packet, data_load, elephant, 'random'
 
 
-def get_packet_sequenced(packets, host_ips, elephant_flows, mice_flows, elephant_probability=[10, 1]):
+def get_packet_sequential(packets, host_ips, elephant_flows, mice_flows, elephant_probability=[10, 1]):
     elephant = random.choices([0, 1], weights=elephant_probability, k=1)[0]
     packets = packets[packets['elephant'] == elephant]
 

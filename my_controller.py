@@ -41,9 +41,12 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         self.log_file = f'logs/log_classified_flows.csv'
         columns = ['timestamp', 'src_ip', 'dst_ip', 'src_port', 'dst_port', 'protocol', 'pkt_size', 'ingress_elephant', 'controller_elephant']
-        self.add_log(columns, self.log_file)
+        with open(self.log_file, 'w', newline = '') as logs:
+            writer = csv.writer(logs)
+            writer.writerow(columns)
 
         self.summary_file = f'logs/summary.txt'
+        self.summary_created = False
 
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -154,11 +157,13 @@ class SimpleSwitch13(app_manager.RyuApp):
                 self.handle_elephant_flow(msg, dpid, features, in_port, src, dst, out_port)
 
             else:
-                # Add Log
-                log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 0, 0]
-                self.add_log(log, self.log_file)
-
                 self.ingress_mice = self.ingress_mice + 1
+
+                if self.ingress_mice % 2 != 0:
+                    # Add Log
+                    log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 0, 0]
+                    self.add_log(log, self.log_file)
+
                 self.handle_mice_flow(msg, dpid, features, in_port, src, dst, out_port)
 
 
@@ -200,11 +205,13 @@ class SimpleSwitch13(app_manager.RyuApp):
         
         # Take action based on the prediction
         if elephant:
-            # Add Log
-            log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 1, 1]
-            self.add_log(log, self.log_file)
-
             self.controller_elephants = self.controller_elephants + 1
+
+            if self.controller_mice % 2 != 0:
+                # Add Log
+                log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 1, 1]
+                self.add_log(log, self.log_file)
+
             actions = [parser.OFPActionOutput(output_port)]
             
             # Add flow rule for elephant flows to avoid packet in again
@@ -229,11 +236,13 @@ class SimpleSwitch13(app_manager.RyuApp):
             self.send(msg, actions)
 
         else:
-            # Add Log
-            log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 1, 0]
-            self.add_log(log, self.log_file)
-
             self.controller_mice = self.controller_mice + 1
+
+            if self.controller_mice % 2 != 0:
+                # Add Log
+                log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 1, 0]
+                self.add_log(log, self.log_file)
+
             self.handle_mice_flow(msg, dpid, features, input_port, src_mac, dst_mac, output_port)
 
 
@@ -299,8 +308,6 @@ class SimpleSwitch13(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def _port_status_handler(self, ev):
-        self.write_summary()
-
         msg = ev.msg
         reason = msg.reason
         port_no = msg.desc.port_no
@@ -319,6 +326,10 @@ class SimpleSwitch13(app_manager.RyuApp):
         else:
             self.logger.info("Illeagal port state %s %s", port_no, reason)
 
+        if self.summary_created == False:
+            self.write_summary()
+            self.summary_created = True
+            
 
     def get_time(self, timestamp):
         datetime_obj = datetime.datetime.fromtimestamp(timestamp)
@@ -329,17 +340,21 @@ class SimpleSwitch13(app_manager.RyuApp):
 
     def write_summary(self):
         summary = open(self.summary_file, "a")
-        
-        summary.write('\n==============================================================================================================\n')
-        summary.write('Classification Overview:\n')
-        summary.write('==============================================================================================================\n')
-        summary.write(f'Total Flows: {(self.ingress_elephants + self.ingress_mice)/2}\n')
-        summary.write(f'Elephant Flows classified at Ingress Port: {self.ingress_elephants/2}\n')
-        summary.write(f'Mice Flows classified at Ingress Port: {self.ingress_mice/2}\n')
-        summary.write(f'Elephant Flows classified by controller: {self.controller_elephants/2}\n')
-        summary.write(f'Mice Flows classified by controller: {self.controller_mice/2}\n')
-        summary.write(f'Total flows finally classified as Elephant: {self.controller_elephants/2}\n')
-        summary.write(f'Total flows finally classified as mice: {(self.controller_mice/2) + (self.ingress_mice/2)}\n')
-        summary.write(f'Flow rules installed to avoid repeated packet-in for classified elephants flows: {self.elephant_flowrules/2}\n')
-        summary.write(f'Flow rules installed to avoid repeated packet-in for classified mice flows: {self.mice_flowrules/2}\n')
+        self.logger.info('Writing summary file')
+        summary.writelines([
+            '\n==============================================================================================================\n',
+            'Classification Overview:\n',
+            '==============================================================================================================\n',
+            f'Total Flows: {(self.ingress_elephants + self.ingress_mice)//2}\n',
+            f'Elephant Flows classified at Ingress Port: {self.ingress_elephants//2}\n',
+            f'Mice Flows classified at Ingress Port: {self.ingress_mice//2}\n',
+            f'Elephant Flows classified by controller: {self.controller_elephants//2}\n',
+            f'Mice Flows classified by controller: {self.controller_mice//2}\n',
+            f'Total flows finally classified as Elephant: {self.controller_elephants//2}\n',
+            f'Total flows finally classified as mice: {(self.controller_mice//2) + (self.ingress_mice//2)}\n',
+            f'Flow rules installed to avoid repeated packet-in for classified elephants flows: {self.elephant_flowrules//2}\n',
+            f'Flow rules installed to avoid repeated packet-in for classified mice flows: {self.mice_flowrules//2}\n',
+            ''
+        ])
+
         summary.close()

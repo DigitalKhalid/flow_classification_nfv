@@ -6,7 +6,7 @@ from mininet.link import TCLink
 import warnings
 import time
 import datetime
-from packet_injection import load_trace_file, get_packet_random, get_packet_sequenced
+from packet_injection import load_trace_file, get_packet_random, get_packet_sequential
 from topology import SimpleTopology
 import random
 from scapy.all import IP
@@ -29,11 +29,11 @@ def inject_packets(net, start_time, network_duration, packets, host_ips, vnf, lo
         pkt_iat = random.uniform(0, pkt_injection_time)
         time.sleep(pkt_iat)
 
-        if pkt_injection_type == 'sequenced':
-            packet, data_size, elephant, injection_order = get_packet_sequenced(packets, host_ips, elephants, mice, injection_ratio)
+        if pkt_injection_type == 'sequential':
+            packet, data_size, elephant, injection_order = get_packet_sequential(packets, host_ips, elephants, mice, injection_ratio)
 
         elif pkt_injection_type == 'random':
-            packet, data_size, elephant, injection_order = get_packet_random(packets, host_ips, elephants, mice, injection_ratio)
+            packet, data_size, elephant, injection_order = get_packet_random(packets, host_ips, injection_ratio)
 
         if elephant == 1:
             elephants = elephants + 1
