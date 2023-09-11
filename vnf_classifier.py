@@ -38,11 +38,11 @@ class FlowClassifier(Node):
         if predicted_class:
             # add vlan tag as 1 for elephant flows
             packet = packet / Dot1Q(vlan=1)
-            info('\nSwitch communicates with the controller to handle this packet.\n')
+            # info('\nSwitch communicates with the controller to handle this packet.\n')
 
         elif not predicted_class:
             # add vlan tag as 0 for mice flows
             packet = packet / Dot1Q(vlan=0)
-            info(f'\nSwitch directly sending the packet to the destination......\n')
+            # info(f'\nSwitch directly sending the packet to the destination......\n')
 
         return packet

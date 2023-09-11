@@ -21,11 +21,12 @@ def gen_packet(src_ip, dst_ip, src_port, dst_port, protocol, pkt_size):
 
     # Create a packet with padding to achieve the desired size
     padding_size = pkt_size - len(packet)
+    padding_size = padding_size if padding_size > 0 else 0
     padding = b'\x00' * padding_size
 
     packet = packet / Raw(load=padding)
-
-    return packet
+   
+    return packet, padding_size
 
 
 def get_packet_random(packets, host_ips, elephant_probability=[10, 1]):
@@ -47,9 +48,9 @@ def get_packet_random(packets, host_ips, elephant_probability=[10, 1]):
     src_ip = random_ips[0]
     dst_ip = random_ips[1]
     
-    packet = gen_packet(src_ip, dst_ip, src_port, dst_port, protocol, pkt_size)
+    packet, data_load = gen_packet(src_ip, dst_ip, src_port, dst_port, protocol, pkt_size)
 
-    return packet, elephant
+    return packet, data_load, elephant, 'random'
 
 
 def get_packet_sequenced(packets, host_ips, elephant_flows, mice_flows, elephant_probability=[10, 1]):
@@ -71,9 +72,9 @@ def get_packet_sequenced(packets, host_ips, elephant_flows, mice_flows, elephant
     src_ip = random_ips[0]
     dst_ip = random_ips[1]
     
-    packet = gen_packet(src_ip, dst_ip, src_port, dst_port, protocol, pkt_size)
+    packet, data_load = gen_packet(src_ip, dst_ip, src_port, dst_port, protocol, pkt_size)
 
-    return packet, elephant
+    return packet, data_load, elephant, 'sequential'
 
 
 if __name__ == '__main__':
@@ -86,7 +87,7 @@ if __name__ == '__main__':
     ]
 
     packets = load_trace_file()
-    packet = get_packet(packets, host_ips)
+    packet = get_packet_random(packets, host_ips)
 
     # Access packet information
     src_ip = packet[IP].src

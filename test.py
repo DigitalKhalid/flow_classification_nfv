@@ -1,11 +1,11 @@
-features = {
-        'src_port': 123,
-        'dst_port': 456,
-        'protocol': 789,
-        'first_pkt_size': 1011,
-}
+import time
+import datetime
 
-features = [value for value in features.values()]
+def get_time(timestamp):
+    datetime_obj = datetime.datetime.fromtimestamp(timestamp)
 
-features = [features]
-print(features)
+    return datetime_obj.strftime("%d-%m-%Y %H:%M")
+
+if __name__ == '__main__':
+    times = time.time()
+    print(get_time(times))

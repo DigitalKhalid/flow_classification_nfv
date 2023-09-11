@@ -27,7 +27,7 @@ echo
 # Start your Ryu application
 echo "Starting Ryu controller....."
 echo
-gnome-terminal -- bash -c 'ryu-manager my_controller_13.py --verbose' &
+gnome-terminal -- bash -c 'ryu-manager my_controller_13.py' &
 # sleep 3
 echo
 

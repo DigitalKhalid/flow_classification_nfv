@@ -1,0 +1,15 @@
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 191.0
+Elephant Flows classified at Ingress Port: 64.0
+Mice Flows classified at Ingress Port: 127.0
+Elephant Flows classified by controller: 19.0
+Mice Flows classified by controller: 45.0
+Total flows finally classified as Elephant: 19.0
+Total flows finally classified as mice: 172.0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 38/2
+Flow rules installed to avoid repeated packet-in for classified mice flows: 344/2
+
+By Digital Khalid
