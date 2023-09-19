@@ -8,8 +8,7 @@ from mininet.log import info
 warnings.filterwarnings("ignore")
 
 def load_trace_file():
-    trace_file = 'datasets/mawi_packet_trace_1.csv'
-    # trace_file = 'flows.csv'
+    trace_file = 'datasets/packet_injection.csv'
     packets = pd.read_csv(trace_file)
 
     return packets

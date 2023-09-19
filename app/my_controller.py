@@ -16,15 +16,6 @@ import numpy as np
 
 warnings.filterwarnings("ignore")
 
-# flow_cookie = {}
-
-# #flow serial number
-# def get_cookie(dpid):
-#     global flow_cookie
-#     flow_cookie.setdefault(dpid, 0)
-#     flow_cookie[dpid] = flow_cookie[dpid] + 1
-#     return flow_cookie[dpid]
-
 
 class MyController(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -49,7 +40,7 @@ class MyController(app_manager.RyuApp):
 
         # Load the machine learning model for controller
         self.model_c = joblib.load('models/model_dtc_controller.pkl')
-        self.scaler_c = joblib.load('models/model_dtc_controller.pkl')
+        self.scaler_c = joblib.load('models/model_dtc_scaler_controller.pkl')
 
         self.log_file = f'logs/log_classified_flows.csv'
         columns = ['timestamp', 'src_ip', 'dst_ip', 'src_port', 'dst_port', 'protocol', 'pkt_size', 'ingress_elephant', 'controller_elephant']
@@ -83,8 +74,6 @@ class MyController(app_manager.RyuApp):
 
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
                                              actions)]
-        
-        # cookie_id = get_cookie(datapath.id)
 
         if buffer_id:
             mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,
@@ -94,9 +83,6 @@ class MyController(app_manager.RyuApp):
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
                                     match=match, instructions=inst)
         datapath.send_msg(mod)
-
-        # if cookie_id != 1 :
-        #     self.flows[datapath.id][cookie_id] = time.time()
 
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -160,7 +146,7 @@ class MyController(app_manager.RyuApp):
                 # Extract the packet size (length)
                 pkt_size = len(msg.data)
 
-                self.logger.info(f'\nPacket injected to ingress port ML model with Features:\nSource Port: {src_port}, Destination Port: {dst_port}, Protocol: {proto}, Pkt Size: {pkt_size}\n')
+                # self.logger.info(f'\nPacket injected to ingress port ML model with Features:\nSource Port: {src_port}, Destination Port: {dst_port}, Protocol: {proto}, Pkt Size: {pkt_size}\n')
 
                 features = [src_ip, dst_ip, src_port, dst_port, proto, pkt_size]
                 
@@ -182,12 +168,16 @@ class MyController(app_manager.RyuApp):
                     else:
                         self.ingress_mice = self.ingress_mice + 1
 
-                        # if self.ingress_mice % 2 != 0:
-                        # Add Log
-                        log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 0, 0]
-                        self.add_log(log, self.log_file)
+                        if self.ingress_mice % 2 != 0:
+                            # Add Log
+                            log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 0, 0]
+                            self.add_log(log, self.log_file)
 
                         self.handle_mice_flow(msg, dpid, features, out_port)
+                
+                else:
+                    if self.flows[dpid][flow_key]['elephant'] == 1:
+                        self.handle_elephant_flow(msg, dpid, features, out_port)
 
         else:
             self.send(msg, actions)
@@ -201,28 +191,13 @@ class MyController(app_manager.RyuApp):
         proto = features[4]
         pkt_size = features[5]
 
-        # elephant_pkt = f'{src_port}-{dst_port}-{proto}' #features[2:5]
-        # self.elephant[dpid][elephant_pkt] = 1
-
         flow_key = f'{src_ip}-{dst_ip}-{src_port}-{dst_port}-{proto}'
 
         if flow_key in self.flows[dpid]:
-            self.logger.info(f'pkts of this flow: {self.flows[dpid][flow_key]["sizes"]}')
-
             if len(self.flows[dpid][flow_key]['sizes']) < 7:
-                self.logger.info(f'Adding pkt to the flows dictionary. Pkts added: {len(self.flows[dpid][flow_key]["sizes"]) + 1}')
                 self.flows[dpid][flow_key]['sizes'].append(pkt_size)
-                
-                if self.flows[dpid][flow_key]['max_iat'] < time.time() - self.flows[dpid][flow_key]['end_time']:
-                    self.flows[dpid][flow_key]['max_iat'] = time.time() - self.flows[dpid][flow_key]['end_time']
-
-                if self.flows[dpid][flow_key]['mean_iat'] > 0:
-                    self.flows[dpid][flow_key]['mean_iat'] = np.mean([self.flows[dpid][flow_key]['mean_iat'], (time.time() - self.flows[dpid][flow_key]['end_time'])])
-                else:
-                    self.flows[dpid][flow_key]['mean_iat'] = time.time() - self.flows[dpid][flow_key]['end_time']
-
-                self.flows[dpid][flow_key]['duration'] = time.time() - self.flows[dpid][flow_key]['start_time']
-                self.flows[dpid][flow_key]['end_time'] = time.time()
+                self.flows[dpid][flow_key]['arrival_time'].append(time.time())
+                self.logger.info(f'Adding pkt to the flows dictionary. Pkts added: {len(self.flows[dpid][flow_key]["sizes"])}')
 
                 if len(self.flows[dpid][flow_key]['sizes']) == 7:
                     elephant = self.predict_elephant(dpid, flow_key, features)
@@ -235,27 +210,24 @@ class MyController(app_manager.RyuApp):
                 self.handle_controller_elephant_flow(msg, elephant, features, output_port)
         
         else:
-            self.logger.info('New flow added to the flow dictionary....')
+            self.logger.info('Elephant flow added to the flow dictionary....')
             self.flows[dpid].setdefault(flow_key, {})
             self.flows[dpid][flow_key].setdefault('sizes', [])
-
-            self.flows[dpid][flow_key]['start_time'] = time.time()
-            self.flows[dpid][flow_key]['end_time'] = time.time()
+            self.flows[dpid][flow_key].setdefault('arrival_time', [])
             self.flows[dpid][flow_key]['sizes'] = [pkt_size]
-            self.flows[dpid][flow_key]['max_iat'] = 0
-            self.flows[dpid][flow_key]['mean_iat'] = 0
-            self.flows[dpid][flow_key]['duration'] = 0
+            self.flows[dpid][flow_key]['arrival_time'].append(time.time())
+            self.flows[dpid][flow_key]['elephant'] = 1
 
 
     def predict_elephant(self, dpid, flow_key, features):
         # Use the machine learning model to predict flow type at controller side
-        max_iat = self.flow[flow_key]['max_iat']
-        mean_iat = self.flows[dpid][flow_key]['mean_iat']
-        duration = self.flows[dpid][flow_key]['duration']
+        max_iat = np.max(self.flows[dpid][flow_key]['arrival_time'])
+        mean_iat = np.mean(self.flows[dpid][flow_key]['arrival_time'])
+        duration = self.flows[dpid][flow_key]['arrival_time'][-1] - self.flows[dpid][flow_key]['arrival_time'][0]
         sizes = self.flows[dpid][flow_key]['sizes']
         total_size = sum(sizes)
 
-        all_features = features[2:6] + sizes
+        all_features = features[2:5] + sizes
         all_features.append(total_size)
         all_features.append(max_iat)
         all_features.append(mean_iat)
@@ -265,7 +237,6 @@ class MyController(app_manager.RyuApp):
         elephant = self.model_c.predict(features_norm)
         elephant = elephant[0]
 
-        self.flows[dpid][flow_key]['elephant'] = elephant
         return elephant
 
 
@@ -286,10 +257,10 @@ class MyController(app_manager.RyuApp):
         if elephant:
             self.controller_elephants = self.controller_elephants + 1
 
-            # if self.controller_mice % 2 != 0:
-            # Add Log
-            log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 1, 1]
-            self.add_log(log, self.log_file)
+            if self.controller_mice % 2 != 0:
+                # Add Log
+                log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 1, 1]
+                self.add_log(log, self.log_file)
 
             actions = [parser.OFPActionOutput(output_port)]
             
@@ -316,10 +287,10 @@ class MyController(app_manager.RyuApp):
         else:
             self.controller_mice = self.controller_mice + 1
 
-            # if self.controller_mice % 2 != 0:
-            # Add Log
-            log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 1, 0]
-            self.add_log(log, self.log_file)
+            if self.controller_mice % 2 != 0:
+                # Add Log
+                log = [time.time(), src_ip, dst_ip, src_port, dst_port, proto, pkt_size, 1, 0]
+                self.add_log(log, self.log_file)
 
             self.handle_mice_flow(msg, dpid, features, output_port)
 
@@ -336,13 +307,16 @@ class MyController(app_manager.RyuApp):
         proto = features[4]
         pkt_size = features[5]
 
-        mice_pkt = f'{src_port}-{dst_port}-{proto}' #features[2:5]
-        self.elephant[dpid][mice_pkt] = 0
-
         actions = [parser.OFPActionOutput(output_port)]
-        
-        # Add flow rule for mice flows to avoid packet in again
-        if mice_pkt in self.elephant[dpid]:
+
+        flow_key = f'{src_ip}-{dst_ip}-{src_port}-{dst_port}-{proto}'
+
+        if flow_key not in self.flows[dpid]:
+            self.logger.info('Mice flow added to the flow dictionary....')
+            self.flows[dpid].setdefault(flow_key, {})
+            self.flows[dpid][flow_key]['elephant'] = 0
+
+            # Add flow rule for mice flows to avoid packet in again
             self.mice_flowrules = self.mice_flowrules + 1
             self.logger.info(f'Flow rule added to avoid same mice packet-in next time.')
 
@@ -378,6 +352,7 @@ class MyController(app_manager.RyuApp):
 
     def add_log(self, log, log_file): 
         self.logger.info(f'\nClassification Log: {log}\n')  
+        self.logger.info(f'Flows Dict: {len(self.flows)}')
 
         with open(log_file, 'a', newline = '') as logs:
             writer = csv.writer(logs)
@@ -430,8 +405,8 @@ class MyController(app_manager.RyuApp):
             f'Mice Flows classified by controller: {self.controller_mice//2}\n',
             f'Total flows finally classified as Elephant: {self.controller_elephants//2}\n',
             f'Total flows finally classified as mice: {(self.controller_mice//2) + (self.ingress_mice//2)}\n',
-            f'Flow rules installed to avoid repeated packet-in for classified elephants flows: {self.elephant_flowrules//2}\n',
-            f'Flow rules installed to avoid repeated packet-in for classified mice flows: {self.mice_flowrules//2}\n',
+            # f'Flow rules installed to avoid repeated packet-in for classified elephants flows: {self.elephant_flowrules//2}\n',
+            # f'Flow rules installed to avoid repeated packet-in for classified mice flows: {self.mice_flowrules//2}\n',
             ''
         ])
 
