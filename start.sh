@@ -27,12 +27,16 @@ echo
 # Start your Ryu application
 echo "Starting Ryu controller....."
 echo
-gnome-terminal -- bash -c 'ryu-manager my_controller.py' &
+gnome-terminal -- bash -c 'ryu-manager app/my_controller.py --verbose' &
 # sleep 3
 echo
+
+# Start a new terminal window for the timer
+# gnome-terminal -- bash -c "display_elapsed_time" &
 
 # Start Mininet
 echo "Creating virtual network....."
 echo
 # sleep 3
-echo "$password" | sudo -S python3 virtual_network.py
+echo "$password" | sudo -S python3 app/virtual_network.py
+

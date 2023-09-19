@@ -13,13 +13,13 @@ Host IP Addresses: ['10.0.0.1', '10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5']
 ==============================================================================================================
 Packet Injection Overview:
 ==============================================================================================================
-Start Time: 11-09-2023 22:08:43
-End Time: 11-09-2023 22:09:13
-Total Packets Injected: 124
-Actual Elephants Injected: 11
-Actual Mice Injected: 113
-Packets injected from the unique flows file extracted from the MAWI dataset.
-Flows extraction from dataset is labeled as elephant flows which are greater than 100MB.
+Start Time: 12-09-2023 22:20:49
+End Time: 12-09-2023 22:21:19
+Total Packets Injected: 118
+Actual Elephants Injected: 12
+Actual Mice Injected: 106
+Packets injected using the flows file extracted from the MAWI dataset.
+Flows extracted from dataset is labeled as elephant flows which are greater than 100MB.
 There are two cost effective decision tree models used. One for classification at ingress
 port of switch and the other is used for re-classification of flows on controller side.
 The first model is trained on dataset extracted from MAWI and the other one is trained on the
@@ -29,12 +29,181 @@ The packets injected from the flows file in sequential order.
 ==============================================================================================================
 Classification Overview:
 ==============================================================================================================
-Total Flows: 111
-Elephant Flows classified at Ingress Port: 38
-Mice Flows classified at Ingress Port: 73
+Total Flows: 106
+Elephant Flows classified at Ingress Port: 37
+Mice Flows classified at Ingress Port: 69
 Elephant Flows classified by controller: 12
-Mice Flows classified by controller: 26
+Mice Flows classified by controller: 25
 Total flows finally classified as Elephant: 12
-Total flows finally classified as mice: 99
+Total flows finally classified as mice: 94
 Flow rules installed to avoid repeated packet-in for classified elephants flows: 12
-Flow rules installed to avoid repeated packet-in for classified mice flows: 99
+Flow rules installed to avoid repeated packet-in for classified mice flows: 94
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 387
+Elephant Flows classified at Ingress Port: 149
+Mice Flows classified at Ingress Port: 238
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 238
+Flow rules installed to avoid repeated packet-in for classified elephants flows: 0
+Flow rules installed to avoid repeated packet-in for classified mice flows: 238
