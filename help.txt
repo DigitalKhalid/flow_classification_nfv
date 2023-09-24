@@ -23,26 +23,27 @@ Pre-requisites to run virtual network simulation
 Settings to customize virtual network simulation
 ----------------------------------------------------------------------------------------------
 - You can customize simulation by changing the values of variables given in file: vn_settings.py
-- There are following settings available:
+- There are following settings available for simulation:
     - vn_host
         - This is virtual network host created by mininet.
         - Default value is 5. You can set the value upto 25.
 
-    - vn_duration
+    - vn_duration (If packets in packet injection file ends up prior to this duration, simulation will stop.)
         - This is virtual network duration in seconds.
         - Default value is 30.
 
+- There are following settings available for generation of packet injection file:
+    You can generate packet injection file as per your requirements. This file will be used to inject packets during simulation.
     - pkt_injection_type
-        - This defines how packets will inject from the source file.
+        - This defines how flows read from the source file.
         - There are two options available:
             - sequential
-                - It will send the packets from source file in a sequenced manner.
+                - It will read the flow from source file in a sequenced manner.
             - random
-                - It will send the packets from the source file in a random order.
+                - It will rea the flow from the source file in a random order.
 
-    - pkt_injection_time
-        - This is the delay in seconds to send the packets ranges from 0 to the given value.
-        - Default value is 0.05 means packets sends by the delay randomly choosen between 0 and 0.05.
+    - injection_flows_count:
+        - Total number of flows generated for packet injection file.
 
     - injection_ratio
         - This is the ratio between mice packets and elephant packets.

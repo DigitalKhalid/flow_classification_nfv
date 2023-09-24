@@ -1,4 +1,4 @@
-from scapy.all import Ether, IP, TCP, Raw, ICMP, wrpcap
+from scapy.all import Ether, IP, TCP, Raw, ICMP, wrpcap, UDP
 import pandas as pd
 import random
 import warnings
@@ -11,7 +11,7 @@ import numpy as np
 warnings.filterwarnings("ignore")
 
 def load_trace_file():
-    flows_file = 'datasets/flows_4.csv'
+    flows_file = 'datasets/mawi_flows.csv'
     trace_file = 'datasets/mawi_packet_trace_original.csv'
 
     packets = pd.read_csv(trace_file)
@@ -22,7 +22,10 @@ def load_trace_file():
 
 def get_data_size(src_ip, dst_ip, src_port, dst_port, protocol, pkt_size):
     # Generate packet
-    packet = Ether(type=0x0800) / IP(src=src_ip, dst=dst_ip, proto=protocol) / TCP(sport=src_port, dport=dst_port) / ICMP()
+    if protocol == 6:
+        packet = Ether(type=0x0800) / IP(src=src_ip, dst=dst_ip, proto=protocol) / TCP(sport=src_port, dport=dst_port) / ICMP()
+    elif protocol == 17:
+        packet = Ether(type=0x0800) / IP(src=src_ip, dst=dst_ip, proto=protocol) / UDP(sport=src_port, dport=dst_port) / ICMP()
 
     # Create a packet with padding to achieve the desired size
     padding_size = pkt_size - len(packet)
@@ -47,9 +50,8 @@ def get_flow_random(packets, elephant_probability=[10, 1]):
     protocol = packet_info[4]
     src_port = packet_info[5]
     dst_port = packet_info[6]
-    pkt_size = packet_info[7]
 
-    return src_ip, dst_ip, protocol, src_port, dst_port, pkt_size, elephant
+    return src_ip, dst_ip, protocol, src_port, dst_port, elephant
 
 
 def get_flow_sequential(packets, elephant_flows, mice_flows, elephant_probability=[10, 1]):
@@ -67,9 +69,8 @@ def get_flow_sequential(packets, elephant_flows, mice_flows, elephant_probabilit
     protocol = packet_info[4]
     src_port = packet_info[5]
     dst_port = packet_info[6]
-    pkt_size = packet_info[7]
 
-    return src_ip, dst_ip, protocol, src_port, dst_port, pkt_size, elephant
+    return src_ip, dst_ip, protocol, src_port, dst_port, elephant
 
 def get_sort(time, last_time):
     if time - last_time == 0:
@@ -82,7 +83,7 @@ def get_sort(time, last_time):
     return serial
 
 
-def get_flow_packets(packets, host_ips, src_ip, dst_ip, protocol, src_port, dst_port, pkt_size, elephant):
+def get_flow_packets(packets, host_ips, src_ip, dst_ip, protocol, src_port, dst_port, elephant):
     flow_packets = packets.query(f'src_ip=="{src_ip}" & dst_ip=="{dst_ip}" & protocol=={protocol} & src_port=={src_port} & dst_port=={dst_port}').head(7)
 
     if len(flow_packets) > 0:
@@ -100,7 +101,7 @@ def get_flow_packets(packets, host_ips, src_ip, dst_ip, protocol, src_port, dst_
         
         flow_packets['elephant'] = elephant
 
-        flow_packets['data_size'] = np.vectorize(get_data_size)(src_ip, dst_ip, src_port, dst_port, protocol, pkt_size)
+        flow_packets['data_size'] = np.vectorize(get_data_size)(src_ip, dst_ip, src_port, dst_port, protocol, flow_packets['pkt_size'])
     
     return flow_packets
 
@@ -111,7 +112,7 @@ def gen_injection_file(host_ips):
 
     # packets = packets.query('protocol==6 | protocol==17')
 
-    output_file = 'datasets/packet_injection1.csv'
+    output_file = 'datasets/packet_injection.csv'
 
     columns = ['iat', 'src_ip', 'dst_ip', 'src_port', 'dst_port', 'protocol', 'pkt_size', 'data_size', 'elephant']
 
@@ -140,10 +141,7 @@ def gen_injection_file(host_ips):
         # Append dataframe to a csv file
         if len(flow_packets) > 0:
             flow_packets = flow_packets[columns]
-            # if created_packets == 0:
             flow_packets.to_csv(output_file, mode='a', index=False, header=False)
-            # else:
-            #     flow_packets.to_csv(output_file, mode='a', index=False, header=False)
 
             created_packets = created_packets + len(flow_packets)
 

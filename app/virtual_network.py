@@ -25,6 +25,12 @@ def inject_packets(net, start_time, network_duration, packets, host_ips, log_fil
             # time.sleep(pkt_iat)
             packet_info = packets.iloc[packet_count]
             packet_count = packet_count + 1
+
+            if packet_info[8] == 1:
+                elephant = elephant + 1
+                
+            elif packet_info[8] == 0:
+                mice = mice +1
             
             send_packet(net, packet_info, host_ips, log_file)
         
@@ -81,8 +87,8 @@ def write_summary(summary_file, hosts_ips, start_time, packet_count, elephants, 
     summary.write(f'Start Time: {get_time(start_time)}\n')
     summary.write(f'End Time: {get_time(time.time())}\n')
     summary.write(f'Total Packets Injected: {packet_count}\n')
-    summary.write(f'Actual Elephants Injected: {elephants}\n')
-    summary.write(f'Actual Mice Injected: {mice}\n')
+    # summary.write(f'Actual Elephants Injected: {elephants}\n')
+    # summary.write(f'Actual Mice Injected: {mice}\n')
     summary.write(f'Packets injected using the flows file extracted from the MAWI dataset.\n')
     summary.write(f'Flows extracted from dataset is labeled as elephant flows which are greater than 100MB.\n')
     summary.write(f'There are two cost effective decision tree models used. One for classification at ingress\n')
