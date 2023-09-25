@@ -6,7 +6,7 @@ import warnings
 import time
 import datetime
 from packet_injection import load_trace_file
-from topology import SimpleTopology
+from topology import SimpleTopology, SFCTopology
 import csv
 from vn_settings import *
 
@@ -106,8 +106,8 @@ def get_time(timestamp):
     return dt
     
 
-def main(hosts, network_duration):
-    topo = SimpleTopology(hosts)
+def main(hosts, network_duration, cli=False):
+    topo = SFCTopology(hosts)
     controller = RemoteController('ryu', ip='127.0.0.1', port=6633, protocols="OpenFlow13")
     net = Mininet(topo, controller=controller, link=TCLink)
 
@@ -118,31 +118,37 @@ def main(hosts, network_duration):
     host_ips = topo.set_ip_addresses(net, hosts)
     info(f'host ips: {host_ips}\n')
 
-    print('Loading packet trace file.....')
-    packets = load_trace_file()
-    packets = packets.sort_values(by='iat', ascending=True)
+    # Open xterm terminals for each host
+    net['sf1'].cmd('xterm -title "Service Function 1" &')
 
-    start_time = time.time()
+    if cli == True:
+        net.interact()
 
-    info(f'Packet injection starts at {datetime.datetime.fromtimestamp(start_time).strftime("%d-%m-%Y %H:%M:%S")}')
-    info(f' and will stop at {datetime.datetime.fromtimestamp(start_time + network_duration).strftime("%d-%m-%Y %H:%M:%S")}\n')
+    else:
+        print('Loading packet trace file.....')
+        packets = load_trace_file()
+        packets = packets.sort_values(by='iat', ascending=True)
 
-    log_file = f'logs/log_injected_packets.csv'
-    columns = ['timestamp', 'src_ip', 'dst_ip', 'src_port', 'dst_port', 'protocol', 'pkt_size', 'elephant']
+        start_time = time.time()
 
-    with open(log_file, 'w', newline = '') as logs:
-        writer = csv.writer(logs)
-        writer.writerow(columns)
-    
-    # net.interact()
-    packet_count, elephant, mice, = inject_packets(net, start_time, network_duration, packets, host_ips, log_file)
+        info(f'Packet injection starts at {datetime.datetime.fromtimestamp(start_time).strftime("%d-%m-%Y %H:%M:%S")}')
+        info(f' and will stop at {datetime.datetime.fromtimestamp(start_time + network_duration).strftime("%d-%m-%Y %H:%M:%S")}\n')
 
-    summary_file = f'logs/summary.txt'
-    write_summary(summary_file, host_ips, start_time, packet_count, elephant, mice)
+        log_file = f'logs/log_injected_packets.csv'
+        columns = ['timestamp', 'src_ip', 'dst_ip', 'src_port', 'dst_port', 'protocol', 'pkt_size', 'elephant']
 
-    # Stop the network
-    net.stop()
+        with open(log_file, 'w', newline = '') as logs:
+            writer = csv.writer(logs)
+            writer.writerow(columns)
+
+        packet_count, elephant, mice, = inject_packets(net, start_time, network_duration, packets, host_ips, log_file)
+
+        summary_file = f'logs/summary.txt'
+        write_summary(summary_file, host_ips, start_time, packet_count, elephant, mice)
+
+        # Stop the network
+        net.stop()
 
 
 if __name__ == '__main__':
-    main(vn_hosts, vn_duration)
+    main(vn_hosts, vn_duration, True)

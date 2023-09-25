@@ -13,8 +13,8 @@ Host IP Addresses: ['10.0.0.1', '10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5']
 ==============================================================================================================
 Packet Injection Overview:
 ==============================================================================================================
-Start Time: 24-09-2023 12:58:28
-End Time: 24-09-2023 13:03:52
+Start Time: 25-09-2023 21:29:06
+End Time: 25-09-2023 21:37:21
 Total Packets Injected: 1099
 Packets injected using the flows file extracted from the MAWI dataset.
 Flows extracted from dataset is labeled as elephant flows which are greater than 100MB.
@@ -22,14 +22,3 @@ There are two cost effective decision tree models used. One for classification a
 port of switch and the other is used for re-classification of flows on controller side.
 The first model is trained on dataset extracted from MAWI and the other one is trained on the
 the same dataset using 7 packet features and statistical features..
-
-==============================================================================================================
-Classification Overview:
-==============================================================================================================
-Total Flows: 339
-Elephant Flows classified at Ingress Port: 51
-Mice Flows classified at Ingress Port: 288
-Elephant Flows classified by controller: 34
-Mice Flows classified by controller: 17
-Total flows finally classified as Elephant: 34
-Total flows finally classified as mice: 305
