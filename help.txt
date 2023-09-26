@@ -26,7 +26,7 @@ Settings to customize virtual network simulation
 - There are following settings available for simulation:
     - vn_host
         - This is virtual network host created by mininet.
-        - Default value is 5. You can set the value upto 25.
+        - Default value is 5. You can set the value upto 9.
 
     - vn_duration (If packets in packet injection file ends up prior to this duration, simulation will stop.)
         - This is virtual network duration in seconds.

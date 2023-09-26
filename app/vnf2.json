@@ -1,0 +1,9 @@
+{
+"name":"dpi",
+"vnf_id": "2",
+"type_id": "1", 
+"group_id": "1",
+"iftype":"3",
+"bidirectional": "true",
+"geo_location":"india.dc1.rack2.row2"
+}

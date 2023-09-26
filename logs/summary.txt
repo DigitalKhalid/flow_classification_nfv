@@ -22,3 +22,58 @@ There are two cost effective decision tree models used. One for classification a
 port of switch and the other is used for re-classification of flows on controller side.
 The first model is trained on dataset extracted from MAWI and the other one is trained on the
 the same dataset using 7 packet features and statistical features..
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 6
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 6
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 6
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 6
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 6
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 6
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0
+
+==============================================================================================================
+Classification Overview:
+==============================================================================================================
+Total Flows: 0
+Elephant Flows classified at Ingress Port: 0
+Mice Flows classified at Ingress Port: 0
+Elephant Flows classified by controller: 0
+Mice Flows classified by controller: 0
+Total flows finally classified as Elephant: 0
+Total flows finally classified as mice: 0

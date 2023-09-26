@@ -6,13 +6,16 @@ import warnings
 import time
 import datetime
 from packet_injection import load_trace_file
-from topology import SimpleTopology, SFCTopology
+from topology import SimpleTopology, SFCTopology, NFVTopology
 import csv
 from vn_settings import *
 
 
 warnings.filterwarnings("ignore")
 setLogLevel( 'info' )
+
+conf_ip_1='192.168.1.200'
+conf_mac_1='00:00:10:00:15:16'
 
 def inject_packets(net, start_time, network_duration, packets, host_ips, log_file):
     packet_count = 0
@@ -107,7 +110,7 @@ def get_time(timestamp):
     
 
 def main(hosts, network_duration, cli=False):
-    topo = SFCTopology(hosts)
+    topo = NFVTopology(hosts)
     controller = RemoteController('ryu', ip='127.0.0.1', port=6633, protocols="OpenFlow13")
     net = Mininet(topo, controller=controller, link=TCLink)
 
@@ -119,7 +122,25 @@ def main(hosts, network_duration, cli=False):
     info(f'host ips: {host_ips}\n')
 
     # Open xterm terminals for each host
-    net['sf1'].cmd('xterm -title "Service Function 1" &')
+    # net['sf1'].cmd('xterm -title "Service Function 1" &')
+
+    vnf1 = net.get('vnf1')
+    vnf2 = net.get('vnf2')
+
+    #vnf1
+    vnf1.cmd('ip route add '+conf_ip_1+'/32 dev h3-eth0')
+    vnf1.cmd('sudo arp -i h3-eth0 -s '+conf_ip_1+' '+conf_mac_1)
+    # vnf1.cmd('sysctl -w net.ipv4.ip_forward=1')
+
+    vnf1.cmd('./vnf_reg.py vnf1.json 127.0.0.1 6633')
+
+
+    #vnf2
+    vnf2.cmd('ip route add '+conf_ip_1+'/32 dev h3-eth0')
+    vnf2.cmd('sudo arp -i h4-eth0 -s '+conf_ip_1+' '+conf_mac_1)
+    # vnf2.cmd('sysctl -w net.ipv4.ip_forward=1')
+
+    vnf1.cmd('./vnf_reg.py vnf2.json 127.0.0.1 6633')
 
     if cli == True:
         net.interact()
@@ -151,4 +172,5 @@ def main(hosts, network_duration, cli=False):
 
 
 if __name__ == '__main__':
-    main(vn_hosts, vn_duration, True)
+    main(vn_hosts, vn_duration)
+    
