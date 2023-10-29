@@ -50,21 +50,6 @@ class MyController(app_manager.RyuApp):
         self.summary_created = False
 
 
-    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
-    def switch_features_handler(self, ev):
-        datapath = ev.msg.datapath
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-
-        self.flows.setdefault(datapath.id, {})
-
-        # install table-miss flow entry
-        match = parser.OFPMatch()
-        actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
-                                          ofproto.OFPCML_NO_BUFFER)]
-        self.add_flow(datapath, 0, match, actions)
-
-
     def add_flow(self, datapath, priority, match, actions, buffer_id=None):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -80,96 +65,6 @@ class MyController(app_manager.RyuApp):
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
                                     match=match, instructions=inst)
         datapath.send_msg(mod)
-
-
-    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
-    def _packet_in_handler(self, ev):
-        if ev.msg.msg_len < ev.msg.total_len:
-            self.logger.debug("packet truncated: only %s of %s bytes",
-                              ev.msg.msg_len, ev.msg.total_len)
-            
-        msg = ev.msg
-        datapath = msg.datapath
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-        in_port = msg.match['in_port']
-
-        pkt = packet.Packet(msg.data)
-        eth = pkt.get_protocols(ethernet.ethernet)[0]
-
-        if eth.ethertype == ether_types.ETH_TYPE_LLDP:
-            # ignore lldp packet
-            return
-        
-        dst = eth.dst
-        src = eth.src
-
-        dpid = datapath.id
-        self.mac_to_port.setdefault(dpid, {})
-            
-        # learn a mac address to avoid FLOOD next time.
-        self.mac_to_port[dpid][src] = in_port
-
-        if dst in self.mac_to_port[dpid]:
-            out_port = self.mac_to_port[dpid][dst]
-        else:
-            out_port = ofproto.OFPP_FLOOD
-
-        actions = [parser.OFPActionOutput(out_port)]
-        features = []
-
-        # Check if the Ethernet frame contains an IP packet
-        if eth.ethertype == ether_types.ETH_TYPE_IP:
-            ip_pkt = pkt.get_protocol(ipv4.ipv4)
-            # Extract the protocol
-            src_ip = ip_pkt.src
-            dst_ip = ip_pkt.dst
-            proto = ip_pkt.proto
-            src_port = 0
-            dst_port = 0
-
-            # Check if the IP packet contains a TCP or UDP packet
-            if proto == 6: # For TCP packet
-                tp_pkt = pkt.get_protocol(tcp.tcp)
-                src_port = tp_pkt.src_port
-                dst_port = tp_pkt.dst_port
-
-            elif proto == 17: # For UDP packet
-                up_pkt = pkt.get_protocol(udp.udp)
-                src_port = up_pkt.src_port
-                dst_port = up_pkt.dst_port
-
-            # Extract the packet size (length)
-            pkt_size = len(msg.data)
-
-            # self.logger.info(f'\nPacket injected to ingress port ML model with Features:\nSource Port: {src_port}, Destination Port: {dst_port}, Protocol: {proto}, Pkt Size: {pkt_size}\n')
-
-            features = [src_ip, dst_ip, src_port, dst_port, proto, pkt_size]
-            flow_key = f'{src_ip}-{dst_ip}-{src_port}-{dst_port}-{proto}'
-
-            if flow_key not in self.flows[dpid]:
-                # Use the machine learning model to predict flow type at ingress port
-                features_norm = self.scaler_i.transform([features[2:6]])
-                elephant = self.model_i.predict(features_norm)
-                elephant = elephant[0]
-
-                # self.logger.info(f'Ingress Port classifies the flow as {"Elephant" if elephant else "Mice"}')
-
-                if elephant:
-                    self.handle_elephant_flow(msg, dpid, features, out_port)
-
-                else:
-                    self.handle_mice_flow(msg, dpid, features, out_port)
-            
-            else:
-                if self.flows[dpid][flow_key]['elephant'] == 1:
-                    self.handle_elephant_flow(msg, dpid, features, out_port)
-                
-                elif self.flows[dpid][flow_key]['elephant'] == 0:
-                    self.handle_mice_flow(msg, dpid, features, out_port)
-
-        else:
-            self.send(msg, actions)
 
 
     def handle_elephant_flow(self, msg, dpid, features, output_port):
@@ -380,31 +275,6 @@ class MyController(app_manager.RyuApp):
             writer.writerow(log)
 
 
-    @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
-    def _port_status_handler(self, ev):
-        msg = ev.msg
-        reason = msg.reason
-        port_no = msg.desc.port_no
-
-        ofproto = msg.datapath.ofproto
-        if reason == ofproto.OFPPR_ADD:
-            self.logger.info("port added %s", port_no)
-
-        elif reason == ofproto.OFPPR_DELETE:
-            self.logger.info("port deleted %s", port_no)
-
-        elif reason == ofproto.OFPPR_MODIFY:
-            self.logger.info("port modified %s", port_no)
-
-        else:
-            self.logger.info("Illeagal port state %s %s", port_no, reason)
-
-        if self.summary_created == False:
-            self.log_controller_mice_balance()
-            self.write_summary()
-            self.summary_created = True
-            
-
     def get_time(self, timestamp):
         datetime_obj = datetime.datetime.fromtimestamp(timestamp)
         dt = datetime_obj.strftime("%d-%m-%Y %H:%M:%S")
@@ -430,3 +300,134 @@ class MyController(app_manager.RyuApp):
         ])
 
         summary.close()
+
+
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+    def switch_features_handler(self, ev):
+        datapath = ev.msg.datapath
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+
+        self.flows.setdefault(datapath.id, {})
+
+        # install table-miss flow entry
+        match = parser.OFPMatch()
+        actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
+                                          ofproto.OFPCML_NO_BUFFER)]
+        self.add_flow(datapath, 0, match, actions)
+
+
+    @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
+    def _port_status_handler(self, ev):
+        msg = ev.msg
+        reason = msg.reason
+        port_no = msg.desc.port_no
+
+        ofproto = msg.datapath.ofproto
+        if reason == ofproto.OFPPR_ADD:
+            self.logger.info("port added %s", port_no)
+
+        elif reason == ofproto.OFPPR_DELETE:
+            self.logger.info("port deleted %s", port_no)
+
+        elif reason == ofproto.OFPPR_MODIFY:
+            self.logger.info("port modified %s", port_no)
+
+        else:
+            self.logger.info("Illeagal port state %s %s", port_no, reason)
+
+        if self.summary_created == False:
+            self.log_controller_mice_balance()
+            self.write_summary()
+            self.summary_created = True
+            
+
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    def _packet_in_handler(self, ev):
+        if ev.msg.msg_len < ev.msg.total_len:
+            self.logger.debug("packet truncated: only %s of %s bytes",
+                              ev.msg.msg_len, ev.msg.total_len)
+            
+        msg = ev.msg
+        datapath = msg.datapath
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+        in_port = msg.match['in_port']
+
+        pkt = packet.Packet(msg.data)
+        eth = pkt.get_protocols(ethernet.ethernet)[0]
+
+        if eth.ethertype == ether_types.ETH_TYPE_LLDP:
+            # ignore lldp packet
+            return
+        
+        dst = eth.dst
+        src = eth.src
+
+        dpid = datapath.id
+        self.mac_to_port.setdefault(dpid, {})
+            
+        # learn a mac address to avoid FLOOD next time.
+        self.mac_to_port[dpid][src] = in_port
+
+        if dst in self.mac_to_port[dpid]:
+            out_port = self.mac_to_port[dpid][dst]
+        else:
+            out_port = ofproto.OFPP_FLOOD
+
+        actions = [parser.OFPActionOutput(out_port)]
+        features = []
+
+        # Check if the Ethernet frame contains an IP packet
+        if eth.ethertype == ether_types.ETH_TYPE_IP:
+            ip_pkt = pkt.get_protocol(ipv4.ipv4)
+            # Extract the protocol
+            src_ip = ip_pkt.src
+            dst_ip = ip_pkt.dst
+            proto = ip_pkt.proto
+            src_port = 0
+            dst_port = 0
+
+            # Check if the IP packet contains a TCP or UDP packet
+            if proto == 6: # For TCP packet
+                tp_pkt = pkt.get_protocol(tcp.tcp)
+                src_port = tp_pkt.src_port
+                dst_port = tp_pkt.dst_port
+
+            elif proto == 17: # For UDP packet
+                up_pkt = pkt.get_protocol(udp.udp)
+                src_port = up_pkt.src_port
+                dst_port = up_pkt.dst_port
+
+            # Extract the packet size (length)
+            pkt_size = len(msg.data)
+
+            # self.logger.info(f'\nPacket injected to ingress port ML model with Features:\nSource Port: {src_port}, Destination Port: {dst_port}, Protocol: {proto}, Pkt Size: {pkt_size}\n')
+
+            features = [src_ip, dst_ip, src_port, dst_port, proto, pkt_size]
+            flow_key = f'{src_ip}-{dst_ip}-{src_port}-{dst_port}-{proto}'
+
+            # if flow_key not in self.flows[dpid]:
+            if flow_key not in self.flows:
+                # Use the machine learning model to predict flow type at ingress port
+                features_norm = self.scaler_i.transform([features[2:6]])
+                elephant = self.model_i.predict(features_norm)
+                elephant = elephant[0]
+
+                # self.logger.info(f'Ingress Port classifies the flow as {"Elephant" if elephant else "Mice"}')
+
+                if elephant:
+                    self.handle_elephant_flow(msg, dpid, features, out_port)
+
+                else:
+                    self.handle_mice_flow(msg, dpid, features, out_port)
+            
+            else:
+                if self.flows[dpid][flow_key]['elephant'] == 1:
+                    self.handle_elephant_flow(msg, dpid, features, out_port)
+                
+                elif self.flows[dpid][flow_key]['elephant'] == 0:
+                    self.handle_mice_flow(msg, dpid, features, out_port)
+
+        else:
+            self.send(msg, actions)

@@ -6,74 +6,20 @@ Network Overview:
 ==============================================================================================================
 Virtual Network: Mininet
 Controller: Ryu
-No. of Switches: 1
+No. of Switches: 5
+No. of VNFs: 2
 No. of Hosts: 5
 Host IP Addresses: ['10.0.0.1', '10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5']
 
 ==============================================================================================================
 Packet Injection Overview:
 ==============================================================================================================
-Start Time: 25-09-2023 21:29:06
-End Time: 25-09-2023 21:37:21
-Total Packets Injected: 1099
+Start Time: 12-10-2023 21:39:41
+End Time: 12-10-2023 21:40:41
+Total Packets Injected: 133
 Packets injected using the flows file extracted from the MAWI dataset.
 Flows extracted from dataset is labeled as elephant flows which are greater than 100MB.
 There are two cost effective decision tree models used. One for classification at ingress
 port of switch and the other is used for re-classification of flows on controller side.
 The first model is trained on dataset extracted from MAWI and the other one is trained on the
 the same dataset using 7 packet features and statistical features..
-
-==============================================================================================================
-Classification Overview:
-==============================================================================================================
-Total Flows: 6
-Elephant Flows classified at Ingress Port: 0
-Mice Flows classified at Ingress Port: 6
-Elephant Flows classified by controller: 0
-Mice Flows classified by controller: 0
-Total flows finally classified as Elephant: 0
-Total flows finally classified as mice: 6
-
-==============================================================================================================
-Classification Overview:
-==============================================================================================================
-Total Flows: 6
-Elephant Flows classified at Ingress Port: 0
-Mice Flows classified at Ingress Port: 6
-Elephant Flows classified by controller: 0
-Mice Flows classified by controller: 0
-Total flows finally classified as Elephant: 0
-Total flows finally classified as mice: 6
-
-==============================================================================================================
-Classification Overview:
-==============================================================================================================
-Total Flows: 0
-Elephant Flows classified at Ingress Port: 0
-Mice Flows classified at Ingress Port: 0
-Elephant Flows classified by controller: 0
-Mice Flows classified by controller: 0
-Total flows finally classified as Elephant: 0
-Total flows finally classified as mice: 0
-
-==============================================================================================================
-Classification Overview:
-==============================================================================================================
-Total Flows: 0
-Elephant Flows classified at Ingress Port: 0
-Mice Flows classified at Ingress Port: 0
-Elephant Flows classified by controller: 0
-Mice Flows classified by controller: 0
-Total flows finally classified as Elephant: 0
-Total flows finally classified as mice: 0
-
-==============================================================================================================
-Classification Overview:
-==============================================================================================================
-Total Flows: 0
-Elephant Flows classified at Ingress Port: 0
-Mice Flows classified at Ingress Port: 0
-Elephant Flows classified by controller: 0
-Mice Flows classified by controller: 0
-Total flows finally classified as Elephant: 0
-Total flows finally classified as mice: 0

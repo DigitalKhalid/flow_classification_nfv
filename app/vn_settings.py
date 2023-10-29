@@ -1,6 +1,6 @@
 # Parameters to customize virtual network simulation
 vn_hosts = 5                        # No. of hosts ranges from 2 ~ 9
-vn_duration = 1000                  # Duration in seconds
+vn_duration = 60                    # Duration in seconds
 
 # Parameters of generate packet injection file for virtual network simulation
 pkt_injection_type = 'sequential'   # sequential or random
